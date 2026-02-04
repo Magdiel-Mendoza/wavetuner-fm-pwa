@@ -42,27 +42,19 @@
       }
     </script>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
       :root {
         --tuner-bg: #020617;
         --glass-bg: rgba(15, 23, 42, 0.6);
         --glass-border: rgba(255, 255, 255, 0.1);
         --text-primary: #f1f5f9;
-        --text-secondary: #94a3b8;
-      }
-      body.light-theme {
-        --tuner-bg: #334155;
-        --glass-bg: rgba(255, 255, 255, 0.08);
-        --glass-border: rgba(255, 255, 255, 0.15);
-        --text-primary: #f8fafc;
-        --text-secondary: #cbd5e1;
       }
       body {
         font-family: 'Inter', sans-serif;
         background-color: var(--tuner-bg);
         color: var(--text-primary);
-        transition: background-color 0.5s ease;
         margin: 0;
+        overflow-x: hidden;
       }
       .glass {
         background: var(--glass-bg);
@@ -74,12 +66,19 @@
         width: 4px;
         background: #22d3ee;
         border-radius: 2px;
-        transition: height 0.2s ease;
       }
-      /* Custom scrollbar */
-      .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-      .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-      .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+      #error-display {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background: #7f1d1d;
+        color: white;
+        padding: 20px;
+        z-index: 9999;
+        font-family: monospace;
+      }
     </style>
     <script type="importmap">
 {
@@ -96,8 +95,26 @@
 </script>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Capa para errores visibles -->
+    <div id="error-display"></div>
+    
+    <div id="root">
+      <div class="flex items-center justify-center min-h-screen">
+        <div class="text-tuner-accent animate-pulse font-bold">Iniciando WaveTuner...</div>
+      </div>
+    </div>
+
+    <!-- Script de diagnóstico -->
+    <script>
+      window.onerror = function(msg, url, line) {
+        const display = document.getElementById('error-display');
+        display.style.display = 'block';
+        display.innerHTML = 'Error de Carga: ' + msg + '<br>Línea: ' + line;
+      };
+    </script>
+
     <script type="text/babel" data-type="module" src="./index.tsx"></script>
+    
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
