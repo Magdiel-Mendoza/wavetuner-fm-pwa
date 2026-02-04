@@ -6,17 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WaveTuner FM | Sintonizador Premium</title>
     <meta name="theme-color" content="#020617" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="./manifest.json" />
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/5695/5695026.png" />
     
     <!-- LameJS para grabación MP3 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.all.min.js"></script>
     
-    <!-- Babel Standalone para procesar TSX -->
+    <!-- Babel Standalone -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -28,7 +27,6 @@
               'tuner-dark': '#020617',
             },
             animation: {
-              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
               'bar-grow': 'barGrow 1.2s ease-in-out infinite',
             },
             keyframes: {
@@ -70,16 +68,18 @@
       #error-display {
         display: none;
         position: fixed;
-        top: 0;
+        bottom: 0;
         left: 0;
         width: 100%;
-        background: #7f1d1d;
+        background: #991b1b;
         color: white;
-        padding: 20px;
-        z-index: 9999;
+        padding: 15px;
+        z-index: 10000;
         font-family: monospace;
+        font-size: 12px;
       }
     </style>
+    
     <script type="importmap">
 {
   "imports": {
@@ -95,32 +95,22 @@
 </script>
   </head>
   <body>
-    <!-- Capa para errores visibles -->
     <div id="error-display"></div>
-    
     <div id="root">
-      <div class="flex items-center justify-center min-h-screen">
-        <div class="text-tuner-accent animate-pulse font-bold">Iniciando WaveTuner...</div>
+      <div class="flex flex-col items-center justify-center min-h-screen space-y-4 text-center">
+        <div class="w-12 h-12 border-4 border-tuner-accent border-t-transparent rounded-full animate-spin"></div>
+        <div class="text-tuner-accent font-bold tracking-widest animate-pulse uppercase">Cargando WaveTuner...</div>
       </div>
     </div>
 
-    <!-- Script de diagnóstico -->
     <script>
       window.onerror = function(msg, url, line) {
         const display = document.getElementById('error-display');
         display.style.display = 'block';
-        display.innerHTML = 'Error de Carga: ' + msg + '<br>Línea: ' + line;
+        display.innerHTML += `<div>[Error] ${msg} - ${line}</div>`;
       };
     </script>
 
-    <script type="text/babel" data-type="module" src="./index.tsx"></script>
-    
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW Error:', err));
-        });
-      }
-    </script>
+    <script type="text/babel" data-type="module" src="index.tsx"></script>
   </body>
 </html>
