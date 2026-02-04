@@ -4,41 +4,18 @@ import ReactDOM from 'react-dom/client';
 import { 
   Play, Square, Volume2, VolumeX, Radio, Mic, AlertCircle, 
   Settings, X, Share2, Sun, Moon, Palette, Check, Loader2, 
-  RadioTower, PlusCircle, FileUp, FileDown, Trash2, 
-  PlayCircle, Star, CalendarClock, Clock, Sparkles, Smartphone
+  RadioTower, Trash2, CalendarClock, Clock, Sparkles, Smartphone
 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
-// --- CONFIG & TYPES ---
+// --- CONFIG ---
 const STORAGE_KEY = 'wavetuner_pro_v2';
 const THEME_KEY = 'wavetuner_theme';
 const QUALITY_STORAGE_KEY = 'wavetuner_quality_pref_v260';
-const APP_VERSION = "2.6.0";
-const VERSION_DATE = "04 de febrero de 2026";
 
 declare const lamejs: any;
 
-interface Station {
-  id: string;
-  name: string;
-  url: string;
-  addedAt: number;
-  favorite?: boolean;
-}
-
-const DEFAULT_STATIONS: Station[] = [
-  { id: '1', name: 'Radio Paradise', url: 'https://stream.radioparadise.com/mp3-128', addedAt: Date.now(), favorite: true },
-  { id: '2', name: 'Classic FM UK', url: 'https://media-ssl.musicradio.com/ClassicFM', addedAt: Date.now() + 1 },
-  { id: '3', name: 'SomaFM Groove Salad', url: 'https://ice1.somafm.com/groovesad-128-mp3', addedAt: Date.now() + 2 },
-];
-
-const RECORDING_QUALITIES = [
-    { id: 'std', label: 'Estándar MP3 (128 kbps)', bits: 128 },
-    { id: 'high', label: 'Alta MP3 (192 kbps)', bits: 192 },
-    { id: 'max', label: 'Máxima MP3 (320 kbps)', bits: 320 },
-];
-
-// --- COMPONENTES INTERNOS ---
+// --- COMPONENTES ---
 
 const Visualizer = ({ isPlaying }) => (
   <div className="flex items-end justify-center gap-1 h-8 w-24 mb-4">
@@ -66,7 +43,6 @@ const RadioPlayer = ({ station, onThemeToggle, currentTheme, allStations, onStat
   const [isMuted, setIsMuted] = useState(false);
   const [error, setError] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
-  const [recordingDuration, setRecordingDuration] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
   const [recordingQuality, setRecordingQuality] = useState(() => {
     return parseInt(localStorage.getItem(QUALITY_STORAGE_KEY)) || 192;
@@ -91,30 +67,35 @@ const RadioPlayer = ({ station, onThemeToggle, currentTheme, allStations, onStat
 
   const startRecording = () => {
     if (!audioRef.current || audioRef.current.paused) return;
-    if (!audioCtxRef.current) {
-        const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
-        audioCtxRef.current = new AudioCtx();
-        mediaSourceNodeRef.current = audioCtxRef.current.createMediaElementSource(audioRef.current);
-        mediaSourceNodeRef.current.connect(audioCtxRef.current.destination);
+    try {
+      if (!audioCtxRef.current) {
+          const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
+          audioCtxRef.current = new AudioCtx();
+          mediaSourceNodeRef.current = audioCtxRef.current.createMediaElementSource(audioRef.current);
+          mediaSourceNodeRef.current.connect(audioCtxRef.current.destination);
+      }
+      mp3DataRef.current = [];
+      mp3EncoderRef.current = new lamejs.Mp3Encoder(2, audioCtxRef.current.sampleRate, recordingQuality);
+      processorNodeRef.current = audioCtxRef.current.createScriptProcessor(4096, 2, 2);
+      processorNodeRef.current.onaudioprocess = (e) => {
+          const left = e.inputBuffer.getChannelData(0);
+          const right = e.inputBuffer.getChannelData(1);
+          const l16 = new Int16Array(left.length);
+          const r16 = new Int16Array(right.length);
+          for(let i=0; i<left.length; i++){
+              l16[i] = Math.max(-1, Math.min(1, left[i])) * 0x7FFF;
+              r16[i] = Math.max(-1, Math.min(1, right[i])) * 0x7FFF;
+          }
+          const buf = mp3EncoderRef.current.encodeBuffer(l16, r16);
+          if(buf.length > 0) mp3DataRef.current.push(new Int8Array(buf));
+      };
+      mediaSourceNodeRef.current.connect(processorNodeRef.current);
+      processorNodeRef.current.connect(audioCtxRef.current.destination);
+      setIsRecording(true);
+    } catch(e) {
+      console.error(e);
+      setError("Error al iniciar grabación");
     }
-    mp3DataRef.current = [];
-    mp3EncoderRef.current = new lamejs.Mp3Encoder(2, audioCtxRef.current.sampleRate, recordingQuality);
-    processorNodeRef.current = audioCtxRef.current.createScriptProcessor(4096, 2, 2);
-    processorNodeRef.current.onaudioprocess = (e) => {
-        const left = e.inputBuffer.getChannelData(0);
-        const right = e.inputBuffer.getChannelData(1);
-        const l16 = new Int16Array(left.length);
-        const r16 = new Int16Array(right.length);
-        for(let i=0; i<left.length; i++){
-            l16[i] = Math.max(-1, Math.min(1, left[i])) * 0x7FFF;
-            r16[i] = Math.max(-1, Math.min(1, right[i])) * 0x7FFF;
-        }
-        const buf = mp3EncoderRef.current.encodeBuffer(l16, r16);
-        if(buf.length > 0) mp3DataRef.current.push(new Int8Array(buf));
-    };
-    mediaSourceNodeRef.current.connect(processorNodeRef.current);
-    processorNodeRef.current.connect(audioCtxRef.current.destination);
-    setIsRecording(true);
   };
 
   const stopRecording = () => {
@@ -154,9 +135,11 @@ const RadioPlayer = ({ station, onThemeToggle, currentTheme, allStations, onStat
             </div>
             <div className="space-y-4">
                 <p className="text-[10px] font-bold text-slate-500 uppercase">Calidad MP3</p>
-                {RECORDING_QUALITIES.map(q => (
-                    <button key={q.id} onClick={() => setRecordingQuality(q.bits)} className={`w-full py-2 px-4 rounded-lg text-xs text-left ${recordingQuality === q.bits ? 'bg-tuner-accent/20 text-tuner-accent border border-tuner-accent' : 'bg-slate-900 text-slate-400'}`}>{q.label}</button>
-                ))}
+                <div className="flex flex-col gap-2">
+                  {[128, 192, 320].map(q => (
+                      <button key={q} onClick={() => setRecordingQuality(q)} className={`w-full py-2 px-4 rounded-lg text-xs text-left ${recordingQuality === q ? 'bg-tuner-accent/20 text-tuner-accent border border-tuner-accent' : 'bg-slate-900 text-slate-400'}`}>{q} kbps</button>
+                  ))}
+                </div>
             </div>
         </div>
       )}
@@ -210,7 +193,7 @@ const AddStationForm = ({ onAdd }) => {
 };
 
 const StationList = ({ stations, currentStationId, onSelect, onDelete }) => (
-  <div className="space-y-2 max-h-[400px] overflow-y-auto custom-scrollbar pr-1">
+  <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
     {stations.length === 0 && <p className="text-center text-slate-600 text-xs py-10">Lista vacía</p>}
     {stations.map(s => (
       <div key={s.id} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${currentStationId === s.id ? 'bg-tuner-accent/10 border-tuner-accent' : 'bg-slate-900/40 border-slate-800 hover:bg-slate-800'}`}>
@@ -224,12 +207,12 @@ const StationList = ({ stations, currentStationId, onSelect, onDelete }) => (
   </div>
 );
 
-// --- APP PRINCIPAL ---
-
 const App = () => {
   const [stations, setStations] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : DEFAULT_STATIONS;
+    return saved ? JSON.parse(saved) : [
+      { id: '1', name: 'Radio Paradise', url: 'https://stream.radioparadise.com/mp3-128', addedAt: Date.now() }
+    ];
   });
   const [currentStation, setCurrentStation] = useState(null);
   const [theme, setTheme] = useState(localStorage.getItem(THEME_KEY) || 'dark');
@@ -278,7 +261,6 @@ const App = () => {
   );
 };
 
-// --- INICIO ---
 const container = document.getElementById('root');
 const root = ReactDOM.createRoot(container);
 root.render(<App />);
