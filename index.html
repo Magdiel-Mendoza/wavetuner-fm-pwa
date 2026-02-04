@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
   <head>
@@ -12,7 +11,7 @@
     <!-- LameJS para grabación MP3 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.all.min.js"></script>
     
-    <!-- Babel Standalone -->
+    <!-- Babel Standalone para procesar TSX en el navegador -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <!-- Tailwind CSS -->
@@ -40,12 +39,18 @@
       }
     </script>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
       :root {
         --tuner-bg: #020617;
         --glass-bg: rgba(15, 23, 42, 0.6);
         --glass-border: rgba(255, 255, 255, 0.1);
         --text-primary: #f1f5f9;
+      }
+      body.light-theme {
+        --tuner-bg: #f1f5f9;
+        --glass-bg: rgba(255, 255, 255, 0.8);
+        --glass-border: rgba(0, 0, 0, 0.1);
+        --text-primary: #0f172a;
       }
       body {
         font-family: 'Inter', sans-serif;
@@ -53,6 +58,7 @@
         color: var(--text-primary);
         margin: 0;
         overflow-x: hidden;
+        transition: background-color 0.4s ease;
       }
       .glass {
         background: var(--glass-bg);
@@ -65,6 +71,10 @@
         background: #22d3ee;
         border-radius: 2px;
       }
+      /* Custom Scrollbar */
+      .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+      .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
       #error-display {
         display: none;
         position: fixed;
@@ -81,25 +91,24 @@
     </style>
     
     <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@18.2.0",
-    "react-dom": "https://esm.sh/react-dom@18.2.0",
-    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-    "lucide-react": "https://esm.sh/lucide-react@0.344.0",
-    "uuid": "https://esm.sh/uuid@9.0.1",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react/": "https://esm.sh/react@^19.2.4/"
-  }
-}
-</script>
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom": "https://esm.sh/react-dom@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
+        "lucide-react": "https://esm.sh/lucide-react@0.460.0?external=react,react-dom",
+        "uuid": "https://esm.sh/uuid@9.0.1"
+      }
+    }
+    </script>
   </head>
   <body>
     <div id="error-display"></div>
     <div id="root">
       <div class="flex flex-col items-center justify-center min-h-screen space-y-4 text-center">
         <div class="w-12 h-12 border-4 border-tuner-accent border-t-transparent rounded-full animate-spin"></div>
-        <div class="text-tuner-accent font-bold tracking-widest animate-pulse uppercase">Cargando WaveTuner...</div>
+        <div class="text-tuner-accent font-bold tracking-widest animate-pulse uppercase text-sm">Cargando WaveTuner...</div>
       </div>
     </div>
 
@@ -107,10 +116,10 @@
       window.onerror = function(msg, url, line) {
         const display = document.getElementById('error-display');
         display.style.display = 'block';
-        display.innerHTML += `<div>[Error] ${msg} - ${line}</div>`;
+        display.innerHTML += `<div>[Error] ${msg} <br><small>${url}:${line}</small></div>`;
       };
     </script>
 
-    <script type="text/babel" data-type="module" src="index.tsx"></script>
+    <script type="text/babel" data-type="module" src="./index.tsx"></script>
   </body>
 </html>
