@@ -1,0 +1,160 @@
+
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WaveTuner FM | Sintonizador Premium</title>
+    <meta name="theme-color" content="#020617" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/5695/5695026.png" />
+    
+    <!-- LameJS para grabación MP3 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.all.min.js"></script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'tuner-gray': '#0f172a',
+              'tuner-accent': '#22d3ee',
+              'tuner-dark': '#020617',
+            },
+            animation: {
+              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'bar-grow': 'barGrow 1.2s ease-in-out infinite',
+            },
+            keyframes: {
+              barGrow: {
+                '0%, 100%': { height: '10%' },
+                '50%': { height: '100%' },
+              }
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono&display=swap');
+      
+      :root {
+        --tuner-bg: #020617;
+        --glass-bg: rgba(15, 23, 42, 0.6);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+      }
+
+      body.light-theme {
+        --tuner-bg: #334155;
+        --glass-bg: rgba(255, 255, 255, 0.08);
+        --glass-border: rgba(255, 255, 255, 0.15);
+        --text-primary: #f8fafc;
+        --text-secondary: #cbd5e1;
+        background-color: var(--tuner-bg) !important;
+        color: var(--text-primary) !important;
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--tuner-bg);
+        color: var(--text-primary);
+        transition: background-color 0.5s ease, color 0.5s ease;
+        overscroll-behavior-y: contain;
+      }
+
+      .glass {
+        background: var(--glass-bg);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid var(--glass-border);
+        transition: all 0.5s ease;
+      }
+
+      .light-theme .text-slate-400 { color: #cbd5e1 !important; }
+      .light-theme .text-slate-500 { color: #e2e8f0 !important; }
+      .light-theme .text-slate-600 { color: #cbd5e1 !important; }
+      
+      .light-theme .bg-slate-800,
+      .light-theme .bg-slate-900, 
+      .light-theme .bg-slate-950 { 
+        background-color: rgba(30, 41, 59, 0.5) !important; 
+        border-color: rgba(255,255,255,0.1) !important;
+      }
+
+      .visualizer-bar {
+        width: 4px;
+        background: #22d3ee;
+        border-radius: 2px;
+        transition: height 0.2s ease;
+        box-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+      }
+
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #475569;
+        border-radius: 10px;
+      }
+      .light-theme ::-webkit-scrollbar-thumb {
+        background: #94a3b8;
+      }
+
+      input[type=range] {
+        -webkit-appearance: none;
+        background: transparent;
+      }
+      input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 14px;
+        width: 14px;
+        border-radius: 50%;
+        background: #22d3ee;
+        cursor: pointer;
+        margin-top: -5px;
+        box-shadow: 0 0 10px rgba(34, 211, 238, 0.6);
+      }
+      input[type=range]::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@19?dev",
+    "react-dom": "https://esm.sh/react-dom@19?dev",
+    "react-dom/client": "https://esm.sh/react-dom@19/client?dev",
+    "lucide-react": "https://esm.sh/lucide-react",
+    "uuid": "https://esm.sh/uuid",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="min-h-screen">
+    <div id="root"></div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('sw.js').catch(err => {
+            console.log('SW registration failed: ', err);
+          });
+        });
+      }
+    </script>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

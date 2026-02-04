@@ -1,0 +1,5 @@
+{
+  "name": "WaveTuner FM - Versión Estable WEB",
+  "description": "A modern web-based FM radio player capable of managing custom station lists and recording streams directly from the browser.",
+  "requestFramePermissions": []
+}
